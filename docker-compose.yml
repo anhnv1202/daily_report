@@ -1,0 +1,20 @@
+services:
+  daily_report_bot:
+    image: nvashinki/daily_report_bot:prod
+    container_name: daily_report_bot
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - mongodb
+    restart: always
+    networks:
+      - bot_network
+
+networks:
+  bot_network:
+    driver: bridge

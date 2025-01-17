@@ -6,7 +6,7 @@ NONE='\033[0m'
 
 MODE=$1
 
-DOCKER_REPO="nvashinki/open_site_back_end"
+DOCKER_REPO="nvashinki/daily_report_bot"
 
 source .env
 

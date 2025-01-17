@@ -1,21 +1,13 @@
-import { EXTRA_MODEL } from '@common/constants/extra-model.const';
 import { APP_LOCALES, Locales } from '@common/constants/global.const';
-import { handleLogInfo } from '@common/utils/helper.utils';
-import { AuthGuard } from '@guards/auth.guard';
-import { TransformInterceptor } from '@interceptors/transform.interceptor';
-import { AuthModule } from '@modules/auth/auth.module';
-import { AuthService } from '@modules/auth/auth.service';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { NestFactory, Reflector } from '@nestjs/core';
-import { JwtService } from '@nestjs/jwt';
+import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { DocumentBuilder, SwaggerDocumentOptions, SwaggerModule } from '@nestjs/swagger';
 import { json, urlencoded } from 'express';
 import helmet from 'helmet';
 import * as i18n from 'i18n';
 import * as path from 'path';
 import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './exceptions/all-exception.filter';
+import LogService from './config/log.service';
 import { setLocal } from './middlewares/locales.middleware';
 import { TrimPipe } from './pipes/trim.pipe';
 
@@ -45,15 +37,10 @@ async function bootstrap() {
       limit: process.env.LIMIT_REQUEST_BODY,
     }),
   );
-  const authService = app.select(AuthModule).get(AuthService);
 
-  app.useGlobalGuards(new AuthGuard(new Reflector(), new JwtService(), authService));
   app.enableCors({});
   // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  process.env.NODE_ENV !== 'production' && configSwagger(app);
   app.use(helmet({ crossOriginResourcePolicy: false }));
-  app.useGlobalInterceptors(new TransformInterceptor(new Reflector()));
-  app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -62,28 +49,8 @@ async function bootstrap() {
   );
   app.useGlobalPipes(new TrimPipe());
   await app.listen(PORT, () => {
-    handleLogInfo(`App is running with port ${PORT}`);
+    LogService.logInfo(`App is running with port ${PORT}`);
   });
-}
-
-function configSwagger(app: INestApplication) {
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Open-Site Backend')
-    .setDescription('Open-Site Backend API')
-    .addBearerAuth({
-      name: 'Authorization',
-      bearerFormat: 'Bearer',
-      scheme: 'Bearer',
-      type: 'http',
-      in: 'Header',
-    })
-    .build();
-
-  const options: SwaggerDocumentOptions = {
-    extraModels: EXTRA_MODEL,
-  };
-  const document = SwaggerModule.createDocument(app, swaggerConfig, options);
-  SwaggerModule.setup(BASE_PATH, app, document);
 }
 
 bootstrap();
